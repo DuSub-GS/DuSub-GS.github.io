@@ -1,0 +1,1303 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dual-Subspace Motion Modeling for Robust Dynamic Gaussian Splatting</title>
+  <style>
+    :root {
+      --ink: #f7fbff;
+      --muted: #b9c7d8;
+      --paper: rgba(10, 17, 31, 0.78);
+      --paper-strong: rgba(11, 20, 36, 0.9);
+      --line: rgba(205, 228, 255, 0.18);
+      --blue: #93c5fd;
+      --cyan: #67e8f9;
+      --green: #86efac;
+      --coral: #fca5a5;
+      --shadow: 0 20px 58px rgba(0, 0, 0, 0.34);
+      --radius: 8px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background: #030712;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 18% 18%, rgba(37, 99, 235, 0.28), transparent 28%),
+        radial-gradient(circle at 82% 8%, rgba(8, 145, 178, 0.24), transparent 26%),
+        radial-gradient(circle at 50% 82%, rgba(21, 128, 61, 0.18), transparent 34%),
+        linear-gradient(180deg, #030712 0%, #07111f 44%, #050816 100%);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        repeating-linear-gradient(90deg, rgba(147, 197, 253, 0.05) 0 1px, transparent 1px 96px),
+        repeating-linear-gradient(0deg, rgba(103, 232, 249, 0.045) 0 1px, transparent 1px 92px);
+      transform-origin: center;
+      animation: gridDrift 18s linear infinite;
+    }
+
+    #motion-bg {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.95;
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(37, 99, 235, 0.32);
+    }
+
+    a:hover {
+      color: var(--coral);
+      border-color: rgba(194, 65, 12, 0.42);
+    }
+
+    img,
+    video {
+      display: block;
+      max-width: 100%;
+    }
+
+    header {
+      position: relative;
+      z-index: 1;
+      min-height: 92vh;
+      display: grid;
+      align-items: end;
+      padding: 42px 24px 58px;
+      color: #ffffff;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .hero-video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -3;
+      filter: brightness(1.24) saturate(1.2) contrast(1.02);
+      transform: scale(1.02);
+    }
+
+    header::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      background:
+        linear-gradient(90deg, rgba(7, 12, 20, 0.58), rgba(7, 12, 20, 0.28) 54%, rgba(7, 12, 20, 0.42)),
+        linear-gradient(180deg, rgba(7, 12, 20, 0.02), rgba(7, 12, 20, 0.54));
+    }
+
+    header::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background:
+        linear-gradient(115deg, transparent 0 30%, rgba(255, 255, 255, 0.12) 42%, transparent 54%),
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 80px);
+      mix-blend-mode: screen;
+      animation: scanSweep 9s ease-in-out infinite;
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+    }
+
+    section {
+      padding: 72px 28px;
+      border-top: 1px solid var(--line);
+    }
+
+    .wrap {
+      width: min(1780px, calc(100% - 48px));
+      margin: 0 auto;
+    }
+
+    .hero {
+      width: min(1500px, calc(100% - 48px));
+      margin: 0 auto;
+    }
+
+    .eyebrow {
+      margin: 0 0 16px;
+      color: rgba(255, 255, 255, 0.76);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      letter-spacing: 0;
+    }
+
+    h1 {
+      max-width: 1320px;
+      margin: 0;
+      font-size: clamp(42px, 7vw, 88px);
+      line-height: 0.98;
+    }
+
+    .authors {
+      max-width: 960px;
+      margin: 24px 0 0;
+      color: rgba(255, 255, 255, 0.88);
+      font-size: clamp(17px, 2vw, 22px);
+      line-height: 1.5;
+    }
+
+    .link-bar {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 32px;
+      max-width: 1380px;
+    }
+
+    .info-tile {
+      min-height: 92px;
+      padding: 14px 15px;
+      border: 1px solid rgba(255, 255, 255, 0.26);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.12);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18);
+      backdrop-filter: blur(16px);
+      animation: softPulse 5.8s ease-in-out infinite;
+    }
+
+    .info-tile span {
+      display: block;
+      margin-bottom: 9px;
+      color: rgba(255, 255, 255, 0.66);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .info-tile strong,
+    .info-tile a {
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.36);
+      font-size: 14px;
+      line-height: 1.34;
+      overflow-wrap: anywhere;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 28px;
+      margin-bottom: 28px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(30px, 4vw, 50px);
+      line-height: 1.05;
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.35;
+    }
+
+    .abstract-text {
+      max-width: none;
+      margin: 0;
+      color: #e9f3ff;
+      font-size: clamp(18px, 1.18vw, 23px);
+      line-height: 1.78;
+    }
+
+    .quick-nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-top: 1px solid rgba(255, 255, 255, 0.36);
+      border-bottom: 1px solid var(--line);
+      background: rgba(5, 12, 24, 0.76);
+      backdrop-filter: blur(18px);
+    }
+
+    .quick-nav .wrap {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      overflow-x: auto;
+      padding: 10px 24px;
+    }
+
+    .quick-nav a {
+      flex: 0 0 auto;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.08);
+      color: #ecf6ff;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .quick-nav a:hover {
+      color: var(--blue);
+      border-color: rgba(37, 99, 235, 0.32);
+    }
+
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .ours-carousel {
+      position: relative;
+    }
+
+    .carousel-track {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(520px, calc((100% - 28px) / 2.2));
+      gap: 18px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      padding: 4px 0 18px;
+      scrollbar-color: rgba(147, 197, 253, 0.82) rgba(255, 255, 255, 0.08);
+    }
+
+    .carousel-track .video-card {
+      scroll-snap-align: start;
+    }
+
+    .carousel-track .video-frame {
+      aspect-ratio: 1 / 1;
+    }
+
+    .carousel-track video {
+      object-fit: cover;
+    }
+
+    .carousel-actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      padding-top: 8px;
+    }
+
+    .carousel-actions button {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: #f7fbff;
+      background: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 0 24px rgba(103, 232, 249, 0.12);
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .carousel-actions button:hover {
+      border-color: rgba(147, 197, 253, 0.6);
+      background: rgba(147, 197, 253, 0.18);
+    }
+
+    .combined-video {
+      width: min(1380px, 100%);
+      margin: 0 auto;
+    }
+
+    .combined-video .video-frame {
+      aspect-ratio: 1304 / 1528;
+    }
+
+    .video-card,
+    .method-cell,
+    .compare-card,
+    figure,
+    .abstract-panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      animation: panelBreath 7s ease-in-out infinite;
+    }
+
+    .abstract-panel {
+      padding: clamp(30px, 3vw, 56px);
+      background:
+        linear-gradient(135deg, rgba(17, 30, 52, 0.88), rgba(8, 22, 40, 0.88)),
+        var(--paper-strong);
+    }
+
+    .video-frame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #0b1118;
+      overflow: hidden;
+    }
+
+    .video-frame::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(120deg, transparent 0 42%, rgba(255, 255, 255, 0.16) 50%, transparent 58%);
+      opacity: 0;
+      transform: translateX(-45%);
+      animation: glint 6.8s ease-in-out infinite;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #0b1118;
+    }
+
+    .caption {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-top: 1px solid var(--line);
+      color: #e9f3ff;
+    }
+
+    .caption strong,
+    .method-label {
+      font-size: 14px;
+      text-transform: capitalize;
+    }
+
+    .caption span {
+      color: var(--muted);
+      font-size: 13px;
+      text-align: right;
+    }
+
+    .method-table {
+      display: grid;
+      gap: 18px;
+    }
+
+    .method-header,
+    .scene-row {
+      display: grid;
+      grid-template-columns: minmax(118px, 0.5fr) repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .method-header {
+      position: sticky;
+      top: 57px;
+      z-index: 5;
+      padding: 10px 0;
+      background: rgba(5, 12, 24, 0.78);
+      backdrop-filter: blur(16px);
+    }
+
+    .method-header div,
+    .scene-name {
+      display: grid;
+      align-items: center;
+      min-height: 46px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.08);
+      color: #ecf6ff;
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .scene-name {
+      min-height: 100%;
+      text-transform: capitalize;
+      background:
+        linear-gradient(135deg, rgba(37, 99, 235, 0.22), rgba(8, 145, 178, 0.2)),
+        rgba(255, 255, 255, 0.08);
+    }
+
+    .method-cell .video-frame {
+      aspect-ratio: 16 / 9;
+    }
+
+    .method-label {
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--line);
+      color: #ecf6ff;
+      font-weight: 800;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .compare-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .compare-card {
+      padding: 14px;
+    }
+
+    .compare-card h3 {
+      padding: 2px 2px 12px;
+      color: #f7fbff;
+      text-transform: capitalize;
+    }
+
+    .compare-shell {
+      --pos: 50%;
+      position: relative;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      border-radius: var(--radius);
+      background: #0b1118;
+      cursor: ew-resize;
+      touch-action: none;
+    }
+
+    .compare-shell video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .compare-base {
+      z-index: 1;
+    }
+
+    .compare-ours {
+      z-index: 2;
+      clip-path: inset(0 calc(100% - var(--pos)) 0 0);
+    }
+
+    .divider {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: var(--pos);
+      z-index: 4;
+      width: 2px;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 0 18px rgba(8, 145, 178, 0.78);
+      transform: translateX(-1px);
+    }
+
+    .handle {
+      position: absolute;
+      top: 50%;
+      left: var(--pos);
+      z-index: 5;
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.82);
+      color: #ffffff;
+      font-size: 18px;
+      font-weight: 800;
+      transform: translate(-50%, -50%);
+      user-select: none;
+      backdrop-filter: blur(10px);
+    }
+
+    .compare-tags {
+      position: absolute;
+      inset: 10px 10px auto;
+      z-index: 6;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .compare-tags span {
+      padding: 6px 9px;
+      border: 1px solid rgba(255, 255, 255, 0.26);
+      border-radius: var(--radius);
+      background: rgba(15, 23, 42, 0.68);
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 800;
+      backdrop-filter: blur(10px);
+    }
+
+    .compare-control {
+      display: grid;
+      gap: 8px;
+      padding-top: 12px;
+    }
+
+    .compare-control label {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--cyan);
+    }
+
+    .fig-grid {
+      display: grid;
+      gap: 20px;
+      width: min(1500px, 100%);
+      margin: 0 auto;
+    }
+
+    figure {
+      margin: 0;
+      background: var(--paper-strong);
+    }
+
+    figure img {
+      width: 100%;
+      height: auto;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    figcaption {
+      display: none;
+    }
+
+    .paper-frame {
+      display: grid;
+      grid-template-columns: minmax(0, 0.62fr) minmax(0, 1.38fr);
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .paper-frame > figure {
+      min-height: 100%;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      padding: clamp(14px, 1.4vw, 26px);
+    }
+
+    .paper-frame > figure img {
+      width: 100%;
+      height: auto;
+      max-height: none;
+      min-height: 0;
+      object-fit: contain;
+      padding: 0;
+      transform: none;
+    }
+
+    footer {
+      position: relative;
+      z-index: 1;
+      padding: 26px 24px 36px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      text-align: center;
+      background: rgba(5, 12, 24, 0.72);
+    }
+
+    @keyframes gridDrift {
+      from {
+        transform: translate3d(0, 0, 0);
+      }
+      to {
+        transform: translate3d(-82px, -76px, 0);
+      }
+    }
+
+    @keyframes scanSweep {
+      0%,
+      100% {
+        transform: translateX(-18%);
+        opacity: 0.4;
+      }
+      50% {
+        transform: translateX(18%);
+        opacity: 0.82;
+      }
+    }
+
+    @keyframes panelBreath {
+      0%,
+      100% {
+        box-shadow: var(--shadow);
+        transform: translateY(0);
+      }
+      50% {
+        box-shadow: 0 24px 70px rgba(103, 232, 249, 0.16), var(--shadow);
+        transform: translateY(-2px);
+      }
+    }
+
+    @keyframes softPulse {
+      0%,
+      100% {
+        border-color: rgba(255, 255, 255, 0.24);
+      }
+      50% {
+        border-color: rgba(147, 197, 253, 0.58);
+      }
+    }
+
+    @keyframes glint {
+      0%,
+      70%,
+      100% {
+        opacity: 0;
+        transform: translateX(-45%);
+      }
+      78% {
+        opacity: 0.34;
+      }
+      88% {
+        opacity: 0;
+        transform: translateX(45%);
+      }
+    }
+
+    @media (max-width: 1040px) {
+      .link-bar,
+      .video-grid,
+      .compare-grid,
+      .paper-frame {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .method-header,
+      .scene-row {
+        grid-template-columns: 1fr;
+      }
+
+      .method-header {
+        position: static;
+      }
+
+      .method-header div:first-child {
+        display: none;
+      }
+
+      .carousel-track {
+        grid-auto-columns: minmax(360px, calc((100% - 18px) / 2));
+      }
+    }
+
+    @media (max-width: 720px) {
+      header {
+        min-height: 88vh;
+        padding: 36px 18px 42px;
+      }
+
+      section {
+        padding: 46px 18px;
+      }
+
+      .section-head {
+        display: block;
+      }
+
+      .link-bar,
+      .video-grid,
+      .compare-grid,
+      .paper-frame {
+        grid-template-columns: 1fr;
+      }
+
+      .quick-nav .wrap {
+        padding: 9px 18px;
+      }
+
+      .carousel-track {
+        grid-auto-columns: minmax(280px, 88%);
+      }
+
+      .paper-frame > figure img {
+        min-height: 280px;
+      }
+
+      .abstract-panel {
+        padding: 20px;
+      }
+
+      .abstract-text {
+        font-size: 16px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+      }
+
+      #motion-bg {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="motion-bg" aria-hidden="true"></canvas>
+
+  <header>
+    <video class="hero-video js-autoplay" autoplay muted loop playsinline webkit-playsinline x5-playsinline x5-video-player-type="h5" preload="metadata" aria-hidden="true">
+      <source src="./ours/coffee_martini_video_rgb.mp4" type="video/mp4">
+    </video>
+    <div class="hero">
+      <p class="eyebrow">Dynamic Gaussian Splatting</p>
+      <h1>Dual-Subspace Motion Modeling for Robust Dynamic Gaussian Splatting</h1>
+      <p class="authors">Bingbing Hu, Yan Li, Yong Yang, Shihui Guo, Junfeng Yao, Hesheng Wang</p>
+      <div class="link-bar" aria-label="paper information and links">
+        <div class="info-tile">
+          <span>Title</span>
+          <strong>Dual-Subspace Motion Modeling for Robust Dynamic Gaussian Splatting</strong>
+        </div>
+        <div class="info-tile">
+          <span>Project</span>
+          <a href="https://dusub-gs.github.io/">dusub-gs.github.io</a>
+        </div>
+        <div class="info-tile">
+          <span>arXiv</span>
+          <a href="./figures/IJCV_DynamicGS_paper.pdf">Paper PDF</a>
+        </div>
+        <div class="info-tile">
+          <span>Paper</span>
+          <a href="./figures/IJCV_DynamicGS_paper.pdf">Paper PDF</a>
+        </div>
+        <div class="info-tile">
+          <span>Code</span>
+          <a href="https://github.com/EllisonKing/DuSub-GS">GitHub</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="quick-nav" aria-label="page sections">
+    <div class="wrap">
+      <a href="#abstract">Abstract</a>
+      <a href="#ours-carousel">Ours</a>
+      <a href="#method-grid">Videos</a>
+      <a href="#figures">Ablation</a>
+    </div>
+  </nav>
+
+  <main>
+    <section id="abstract">
+      <div class="wrap paper-frame">
+        <div class="abstract-panel">
+          <div class="section-head">
+            <h2>Abstract</h2>
+          </div>
+          <p class="abstract-text">
+            Reconstructing dynamic scenes from monocular videos remains challenging because motion modeling methods often suffer from temporal instability, boundary artifacts, or geometric collapse. We propose a principled motion decomposition framework for monocular dynamic scene reconstruction based on dynamic Gaussian Splatting. The method separates motion into two complementary components: a Chebyshev field for globally stable low-frequency motion trends and a Residual Motion field for localized high-frequency dynamics outside the spectral subspace. The joint optimization objective enforces appearance consistency, geometric plausibility, and residual regularization, producing stable and faithful dynamic reconstruction.
+          </p>
+        </div>
+        <figure>
+          <img src="./figures/framework_base.png" alt="Framework architecture">
+        </figure>
+      </div>
+    </section>
+
+    <section id="ours-carousel">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Ours</h2>
+        </div>
+        <div class="ours-carousel">
+          <div class="carousel-track" id="oursCarousel"></div>
+          <div class="carousel-actions" aria-label="Ours video carousel controls">
+            <button type="button" data-carousel-prev aria-label="Previous Ours video">&lsaquo;</button>
+            <button type="button" data-carousel-next aria-label="Next Ours video">&rsaquo;</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="method-grid">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Combined Video</h2>
+        </div>
+        <article class="video-card combined-video">
+          <div class="video-frame">
+            <video id="combinedVideo" class="js-autoplay" data-priority-video autoplay muted loop playsinline webkit-playsinline x5-playsinline x5-video-player-type="h5" controls preload="auto" title="GT Ours ADCGS DeGauss combined video">
+              <source src="./figures/all_methods_mosaic.webm" type="video/webm">
+              <source src="./figures/all_methods_mosaic.mp4" type="video/mp4">
+            </video>
+          </div>
+          <div class="caption">
+            <strong>GT / Ours / ADCGS / DeGauss</strong>
+            <span>All scenes</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="figures">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Ablation</h2>
+        </div>
+        <div class="fig-grid">
+          <figure>
+            <img src="./figures/albation_details.jpg" alt="Ablation study details">
+          </figure>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Dual-Subspace Motion Modeling for Robust Dynamic Gaussian Splatting
+  </footer>
+
+  <script>
+    const methods = {
+      GT: {
+        label: "GT",
+        videos: {
+          coffee_martini: "./GT/coffee_martini_gt.mp4",
+          cook_spinach: "./GT/cook_spinach_gt.mp4",
+          cut_roasted_beef: "./GT/cut_roasted_beef_gt.mp4",
+          flame_salmon_1: "./GT/flame_salmon_1_gt.mp4",
+          flame_steak: "./GT/flame_steak_gt.mp4",
+          sear_steak: "./GT/sear_steak_gt.mp4"
+        }
+      },
+      ours: {
+        label: "Ours",
+        videos: {
+          coffee_martini: "./ours/coffee_martini_video_rgb.mp4",
+          cook_spinach: "./ours/cook_spinach_video_rgb.mp4",
+          cut_roasted_beef: "./ours/cut_roasted_beef_video_rgb.mp4",
+          flame_salmon_1: "./ours/flame_salmon_1_video_rgb.mp4",
+          flame_steak: "./ours/flame_steak_video_rgb.mp4",
+          sear_steak: "./ours/sear_steak_video_rgb.mp4"
+        }
+      },
+      ADCGS: {
+        label: "ADCGS",
+        videos: {
+          coffee_martini: "./ADCGS/coffee_martini_video_rgb.mp4",
+          cook_spinach: "./ADCGS/cook_spinach_video_rgb.mp4",
+          cut_roasted_beef: "./ADCGS/cut_roasted_beef_video_rgb.mp4",
+          flame_salmon_1: "./ADCGS/flame_salmon_1_video_rgb.mp4",
+          flame_steak: "./ADCGS/flame_steak_video_rgb.mp4",
+          sear_steak: "./ADCGS/sear_steak_video_rgb.mp4"
+        }
+      },
+      DeGauss: {
+        label: "DeGauss",
+        videos: {
+          coffee_martini: "./DeGauss/coffee_martini_pred_test.mp4",
+          cook_spinach: "./DeGauss/cook_spinach_pred_test.mp4",
+          cut_roasted_beef: "./DeGauss/cut_roasted_beef_pred_test.mp4",
+          flame_salmon_1: "./DeGauss/flame_salmon_1_pred_test.mp4",
+          flame_steak: "./DeGauss/flame_steak_pred_test.mp4",
+          sear_steak: "./DeGauss/sear_steak_pred_test.mp4"
+        }
+      }
+    };
+
+    const scenes = Object.keys(methods.ours.videos);
+    const methodOrder = ["GT", "ours", "ADCGS", "DeGauss"];
+    const compareOrder = ["ADCGS", "DeGauss"];
+    const sceneTitle = (name) => name.replaceAll("_", " ");
+
+    function videoBlock(src, title, extraClass = "") {
+      return `
+        <div class="video-frame">
+          <video class="js-autoplay ${extraClass}" autoplay muted loop playsinline webkit-playsinline x5-playsinline x5-video-player-type="h5" controls preload="metadata" title="${title}">
+            <source src="${src}" type="video/mp4">
+          </video>
+        </div>
+      `;
+    }
+
+    function renderOursCarousel() {
+      const carousel = document.getElementById("oursCarousel");
+      carousel.innerHTML = scenes.map((scene) => `
+        <article class="video-card">
+          ${videoBlock(methods.ours.videos[scene], `Ours ${sceneTitle(scene)}`)}
+          <div class="caption">
+            <strong>${sceneTitle(scene)}</strong>
+            <span>Ours</span>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function bindOursCarousel() {
+      const carousel = document.getElementById("oursCarousel");
+      const prev = document.querySelector("[data-carousel-prev]");
+      const next = document.querySelector("[data-carousel-next]");
+      if (!carousel || !prev || !next) return;
+      const step = () => Math.max(280, Math.floor(carousel.clientWidth * 0.72));
+      prev.addEventListener("click", () => carousel.scrollBy({ left: -step(), behavior: "smooth" }));
+      next.addEventListener("click", () => carousel.scrollBy({ left: step(), behavior: "smooth" }));
+    }
+
+    function isNearViewport(element, margin = 420) {
+      const rect = element.getBoundingClientRect();
+      return rect.bottom > -margin && rect.top < window.innerHeight + margin;
+    }
+
+    function shouldPlayVideo(video) {
+      return video.hasAttribute("data-priority-video") || video.classList.contains("hero-video") || isNearViewport(video);
+    }
+
+    function renderMethodTable() {
+      const table = document.getElementById("methodTable");
+      const header = `
+        <div class="method-header" aria-hidden="true">
+          <div>Scene</div>
+          ${methodOrder.map((method) => `<div>${methods[method].label}</div>`).join("")}
+        </div>
+      `;
+      const rows = scenes.map((scene) => `
+        <div class="scene-row">
+          <div class="scene-name">${sceneTitle(scene)}</div>
+          ${methodOrder.map((method) => `
+            <article class="method-cell">
+              <div class="method-label">${methods[method].label}</div>
+              ${videoBlock(methods[method].videos[scene], `${methods[method].label} ${sceneTitle(scene)}`)}
+              <div class="caption">
+                <strong>${sceneTitle(scene)}</strong>
+                <span>${methods[method].label}</span>
+              </div>
+            </article>
+          `).join("")}
+        </div>
+      `).join("");
+      table.innerHTML = header + rows;
+    }
+
+    function renderCompareCards() {
+      const grid = document.getElementById("compareGrid");
+      const cards = [];
+      scenes.forEach((scene) => {
+        compareOrder.forEach((method) => {
+          cards.push(`
+            <article class="compare-card">
+              <h3>${sceneTitle(scene)}</h3>
+              <div class="compare-shell" data-compare>
+                <video class="compare-base js-autoplay" autoplay muted loop playsinline webkit-playsinline x5-playsinline x5-video-player-type="h5" preload="metadata" title="${methods[method].label} ${sceneTitle(scene)}">
+                  <source src="${methods[method].videos[scene]}" type="video/mp4">
+                </video>
+                <video class="compare-ours js-autoplay" autoplay muted loop playsinline webkit-playsinline x5-playsinline x5-video-player-type="h5" preload="metadata" title="Ours ${sceneTitle(scene)}">
+                  <source src="${methods.ours.videos[scene]}" type="video/mp4">
+                </video>
+                <div class="compare-tags"><span>${methods[method].label}</span><span>Ours</span></div>
+                <div class="divider"></div>
+                <div class="handle" aria-hidden="true">&harr;</div>
+              </div>
+              <div class="compare-control">
+                <input type="range" min="0" max="100" value="50" aria-label="${sceneTitle(scene)} ${methods[method].label} and Ours comparison">
+              </div>
+            </article>
+          `);
+        });
+      });
+      grid.innerHTML = cards.join("");
+    }
+
+    function bindCompareCards() {
+      document.querySelectorAll(".compare-card").forEach((card) => {
+        const shell = card.querySelector("[data-compare]");
+        const range = card.querySelector("input[type='range']");
+        const videos = Array.from(card.querySelectorAll("video"));
+
+        const setPosition = (value) => {
+          const clamped = Math.max(0, Math.min(100, value));
+          shell.style.setProperty("--pos", `${clamped}%`);
+          range.value = clamped;
+        };
+
+        const fromPointer = (event) => {
+          const rect = shell.getBoundingClientRect();
+          setPosition(((event.clientX - rect.left) / rect.width) * 100);
+        };
+
+        range.addEventListener("input", (event) => setPosition(Number(event.target.value)));
+        shell.addEventListener("pointerdown", (event) => {
+          shell.setPointerCapture(event.pointerId);
+          fromPointer(event);
+        });
+        shell.addEventListener("pointermove", (event) => {
+          if (event.buttons === 1) fromPointer(event);
+        });
+
+        videos.forEach((video) => {
+          video.addEventListener("play", () => {
+            videos.forEach((item) => {
+              if (item !== video && item.paused) item.play().catch(() => {});
+            });
+          });
+        });
+
+        const syncPair = () => {
+          const [base, ours] = videos;
+          if (!isNearViewport(shell, 260)) {
+            videos.forEach((video) => {
+              if (!video.paused) video.pause();
+            });
+            requestAnimationFrame(syncPair);
+            return;
+          }
+          if (base && ours && Number.isFinite(base.currentTime)) {
+            if (base.paused) base.play().catch(() => {});
+            if (ours.paused) ours.play().catch(() => {});
+            if (Math.abs(base.currentTime - ours.currentTime) > 0.12) {
+              ours.currentTime = base.currentTime;
+            }
+          }
+          requestAnimationFrame(syncPair);
+        };
+        videos.forEach((video) => {
+          video.addEventListener("seeking", () => {
+            const [base, ours] = videos;
+            if (base && ours && video === base) ours.currentTime = base.currentTime;
+            if (base && ours && video === ours) base.currentTime = ours.currentTime;
+          });
+        });
+        syncPair();
+        setPosition(50);
+      });
+    }
+
+    function bindVideoState() {
+      document.querySelectorAll("video").forEach((video) => {
+        video.autoplay = true;
+        video.loop = true;
+        video.muted = true;
+        video.defaultMuted = true;
+        video.playsInline = true;
+        video.addEventListener("loadedmetadata", () => {
+          if (shouldPlayVideo(video)) video.play().catch(() => {});
+        });
+        video.addEventListener("canplay", () => {
+          if (shouldPlayVideo(video)) video.play().catch(() => {});
+        });
+        video.addEventListener("pause", () => {
+          if (!document.hidden && shouldPlayVideo(video)) setTimeout(() => video.play().catch(() => {}), 160);
+        });
+        video.addEventListener("error", () => {
+          const owner = video.closest(".video-card, .method-cell, .compare-card");
+          if (owner) owner.classList.add("has-error");
+        });
+      });
+    }
+
+    function playAllVideos() {
+      document.querySelectorAll("video").forEach((video) => {
+        if (video.classList.contains("hero-video")) {
+          video.playbackRate = 1.65;
+        }
+        if (shouldPlayVideo(video)) {
+          if (video.readyState === 0) video.load();
+          video.play().catch(() => {
+            video.setAttribute("data-waiting-for-gesture", "true");
+          });
+        } else if (!video.paused) {
+          video.pause();
+        }
+      });
+    }
+
+    function startMotionBackground() {
+      const canvas = document.getElementById("motion-bg");
+      const ctx = canvas.getContext("2d");
+      const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (!ctx || prefersReduced) return;
+
+      let width = 0;
+      let height = 0;
+      let dpr = 1;
+      let time = 0;
+      let bigStars = [];
+      let smallStars = [];
+      let meteors = [];
+
+      const makeBigStars = () => Array.from({ length: 16 }, (_, index) => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        radius: 48 + Math.random() * 18,
+        speed: 0.22 + Math.random() * 0.34,
+        drift: 0.18 + Math.random() * 0.36,
+        rotation: Math.random() * Math.PI * 2,
+        twinkle: Math.random() * Math.PI * 2,
+        tint: index % 3 === 0 ? "147, 197, 253" : index % 3 === 1 ? "103, 232, 249" : "255, 255, 255"
+      }));
+
+      const makeSmallStars = () => Array.from({ length: 100 }, (_, index) => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        r: 0.8 + Math.random() * 1.8,
+        speed: 0.18 + Math.random() * 0.62,
+        twinkle: Math.random() * Math.PI * 2,
+        tint: index % 4 === 0 ? "147, 197, 253" : index % 4 === 1 ? "103, 232, 249" : "255, 255, 255"
+      }));
+
+      const drawStar = (x, y, radius, rotation, color, alpha) => {
+        const inner = radius * 0.42;
+        ctx.beginPath();
+        for (let i = 0; i < 10; i += 1) {
+          const r = i % 2 === 0 ? radius : inner;
+          const angle = rotation - Math.PI / 2 + i * Math.PI / 5;
+          const px = x + Math.cos(angle) * r;
+          const py = y + Math.sin(angle) * r;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fillStyle = `rgba(${color}, ${alpha * 0.22})`;
+        ctx.strokeStyle = `rgba(${color}, ${alpha})`;
+        ctx.lineWidth = 2.2;
+        ctx.shadowBlur = 22;
+        ctx.shadowColor = `rgba(${color}, ${alpha * 0.85})`;
+        ctx.fill();
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+      };
+
+      const resize = () => {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = Math.floor(width * dpr);
+        canvas.height = Math.floor(height * dpr);
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        bigStars = makeBigStars();
+        smallStars = makeSmallStars();
+      };
+
+      const draw = () => {
+        time += 0.018;
+        ctx.clearRect(0, 0, width, height);
+
+        bigStars.forEach((star) => {
+          star.y += star.speed;
+          star.x += Math.sin(time * star.drift + star.twinkle) * 0.32;
+          star.rotation += 0.0025;
+          if (star.y > height + star.radius + 8) {
+            star.y = -star.radius - 8;
+            star.x = Math.random() * width;
+          }
+          const alpha = 0.34 + Math.sin(time * 2.2 + star.twinkle) * 0.18;
+          drawStar(star.x, star.y, star.radius, star.rotation, star.tint, alpha);
+        });
+
+        smallStars.forEach((star) => {
+          star.y += star.speed;
+          star.x += Math.sin(time + star.twinkle) * 0.08;
+          if (star.y > height + 4) {
+            star.y = -4;
+            star.x = Math.random() * width;
+          }
+          const alpha = 0.45 + Math.sin(time * 2.4 + star.twinkle) * 0.28;
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${star.tint}, ${alpha})`;
+          ctx.fill();
+        });
+
+        if (Math.random() < 0.025 && meteors.length < 4) {
+          meteors.push({
+            x: Math.random() * width,
+            y: -30,
+            length: 90 + Math.random() * 90,
+            speed: 7 + Math.random() * 5,
+            alpha: 0.9
+          });
+        }
+
+        meteors = meteors.filter((meteor) => meteor.y < height + 120 && meteor.alpha > 0.04);
+        meteors.forEach((meteor) => {
+          meteor.x += meteor.speed * 1.3;
+          meteor.y += meteor.speed;
+          meteor.alpha *= 0.985;
+          const gradient = ctx.createLinearGradient(meteor.x, meteor.y, meteor.x - meteor.length, meteor.y - meteor.length * 0.72);
+          gradient.addColorStop(0, `rgba(255, 255, 255, ${meteor.alpha})`);
+          gradient.addColorStop(0.45, `rgba(103, 232, 249, ${meteor.alpha * 0.52})`);
+          gradient.addColorStop(1, "rgba(103, 232, 249, 0)");
+          ctx.beginPath();
+          ctx.moveTo(meteor.x, meteor.y);
+          ctx.lineTo(meteor.x - meteor.length, meteor.y - meteor.length * 0.72);
+          ctx.lineWidth = 1.6;
+          ctx.strokeStyle = gradient;
+          ctx.stroke();
+        });
+
+        requestAnimationFrame(draw);
+      };
+
+      window.addEventListener("resize", resize);
+      resize();
+      draw();
+    }
+
+    renderOursCarousel();
+    bindVideoState();
+    bindOursCarousel();
+    startMotionBackground();
+    playAllVideos();
+
+    window.addEventListener("DOMContentLoaded", playAllVideos);
+    window.addEventListener("focus", playAllVideos);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) playAllVideos();
+    });
+    document.addEventListener("pointerdown", playAllVideos, { once: true });
+    setInterval(playAllVideos, 2400);
+  </script>
+</body>
+</html>
