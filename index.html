@@ -92,15 +92,46 @@
       isolation: isolate;
     }
 
-    .hero-video {
+    .hero-slideshow {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -3;
+      overflow: hidden;
+      background: #07111f;
+    }
+
+    .hero-slide {
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
-      z-index: -3;
-      filter: brightness(1.24) saturate(1.2) contrast(1.02);
-      transform: scale(1.02);
+      opacity: 0;
+      filter: brightness(1.18) saturate(1.08) contrast(1.04);
+      transform: scale(1.04);
+      animation: heroImageCycle 36s ease-in-out infinite;
+    }
+
+    .hero-slide:nth-child(2) {
+      animation-delay: 6s;
+    }
+
+    .hero-slide:nth-child(3) {
+      animation-delay: 12s;
+    }
+
+    .hero-slide:nth-child(4) {
+      animation-delay: 18s;
+    }
+
+    .hero-slide:nth-child(5) {
+      animation-delay: 24s;
+    }
+
+    .hero-slide:nth-child(6) {
+      animation-delay: 30s;
     }
 
     header::before {
@@ -237,8 +268,15 @@
       max-width: none;
       margin: 0;
       color: #e9f3ff;
-      font-size: clamp(18px, 1.18vw, 23px);
-      line-height: 1.78;
+      font-size: clamp(17px, 1.05vw, 21px);
+      line-height: 1.7;
+      text-align: justify;
+      text-justify: inter-word;
+    }
+
+    .paper-frame .abstract-text {
+      columns: 2 560px;
+      column-gap: clamp(28px, 4vw, 72px);
     }
 
     .quick-nav {
@@ -299,14 +337,6 @@
 
     .carousel-track .video-card {
       scroll-snap-align: start;
-    }
-
-    .carousel-track .video-frame {
-      aspect-ratio: 1 / 1;
-    }
-
-    .carousel-track video {
-      object-fit: cover;
     }
 
     .carousel-actions {
@@ -389,6 +419,18 @@
       height: 100%;
       object-fit: contain;
       background: #0b1118;
+    }
+
+    .carousel-track .video-frame {
+      aspect-ratio: 1 / 1;
+      height: auto;
+      min-height: 0;
+    }
+
+    .carousel-track video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .caption {
@@ -591,6 +633,203 @@
       margin: 0 auto;
     }
 
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .metric-card {
+      min-height: 132px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(13, 33, 54, 0.78)),
+        var(--paper);
+      box-shadow: var(--shadow);
+      animation: panelBreath 7s ease-in-out infinite;
+    }
+
+    .metric-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .metric-card strong {
+      display: block;
+      margin-top: 14px;
+      color: #f7fbff;
+      font-size: clamp(30px, 3.2vw, 52px);
+      line-height: 1;
+    }
+
+    .metric-card em {
+      display: block;
+      margin-top: 10px;
+      color: #a7f3d0;
+      font-style: normal;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .response-gallery {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 18px;
+      align-items: start;
+    }
+
+    .response-card {
+      grid-column: span 6;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(9, 16, 30, 0.82);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      animation: panelBreath 7s ease-in-out infinite;
+    }
+
+    .response-card.figure-card {
+      background:
+        linear-gradient(145deg, rgba(15, 23, 42, 0.86), rgba(7, 20, 35, 0.86)),
+        var(--paper);
+    }
+
+    .response-card.wide {
+      grid-column: span 12;
+    }
+
+    .response-card img {
+      width: 100%;
+      height: auto;
+      display: block;
+      background: #ffffff;
+    }
+
+    .response-card.figure-card img {
+      height: clamp(260px, 24vw, 420px);
+      object-fit: contain;
+      padding: 16px;
+    }
+
+    .response-card.figure-card.wide img {
+      height: clamp(320px, 32vw, 560px);
+    }
+
+    .response-caption {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 16px;
+      color: #e9f3ff;
+      border-top: 1px solid var(--line);
+    }
+
+    .response-caption strong {
+      font-size: 15px;
+    }
+
+    .response-caption span {
+      color: var(--muted);
+      font-size: 13px;
+      text-align: right;
+    }
+
+    .table-card {
+      grid-column: span 6;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(145deg, rgba(12, 24, 44, 0.88), rgba(8, 21, 35, 0.84)),
+        var(--paper);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      animation: panelBreath 7s ease-in-out infinite;
+    }
+
+    .table-card.wide {
+      grid-column: span 12;
+    }
+
+    .representation-table {
+      order: 1;
+    }
+
+    .n3dv-table {
+      order: 2;
+    }
+
+    .table-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .table-title strong {
+      color: #f7fbff;
+      font-size: 17px;
+    }
+
+    .table-title span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .table-scroll {
+      overflow-x: auto;
+      scrollbar-color: rgba(147, 197, 253, 0.82) rgba(255, 255, 255, 0.08);
+    }
+
+    .data-table {
+      width: 100%;
+      min-width: 560px;
+      border-collapse: collapse;
+      color: #e9f3ff;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .data-table th,
+    .data-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .data-table th:first-child,
+    .data-table td:first-child {
+      text-align: left;
+      font-weight: 800;
+    }
+
+    .data-table th {
+      color: rgba(220, 238, 255, 0.74);
+      font-size: 11px;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .data-table tr.highlight td {
+      color: #ffffff;
+      background: linear-gradient(90deg, rgba(14, 165, 233, 0.2), rgba(45, 212, 191, 0.12));
+      font-weight: 800;
+    }
+
+    .data-table tr:last-child td {
+      border-bottom: 0;
+    }
+
     figure {
       margin: 0;
       background: var(--paper-strong);
@@ -608,17 +847,20 @@
 
     .paper-frame {
       display: grid;
-      grid-template-columns: minmax(0, 0.62fr) minmax(0, 1.38fr);
-      gap: 28px;
-      align-items: stretch;
+      grid-template-columns: 1fr;
+      gap: 22px;
+      align-items: start;
     }
 
     .paper-frame > figure {
-      min-height: 100%;
+      align-self: start;
+      justify-self: center;
+      width: min(1500px, 100%);
+      min-height: 0;
       display: grid;
-      place-items: center;
+      place-items: start center;
       overflow: hidden;
-      padding: clamp(14px, 1.4vw, 26px);
+      padding: clamp(12px, 1.2vw, 20px);
     }
 
     .paper-frame > figure img {
@@ -659,6 +901,24 @@
       50% {
         transform: translateX(18%);
         opacity: 0.82;
+      }
+    }
+
+    @keyframes heroImageCycle {
+      0% {
+        opacity: 0;
+        transform: scale(1.04) translate3d(0, 0, 0);
+      }
+      5%,
+      18% {
+        opacity: 1;
+      }
+      30% {
+        opacity: 0;
+        transform: scale(1.12) translate3d(-1.4%, -1.2%, 0);
+      }
+      100% {
+        opacity: 0;
       }
     }
 
@@ -703,9 +963,16 @@
     @media (max-width: 1040px) {
       .link-bar,
       .video-grid,
-      .compare-grid,
-      .paper-frame {
+      .metric-grid,
+      .compare-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .response-card,
+      .response-card.wide,
+      .table-card,
+      .table-card.wide {
+        grid-column: span 12;
       }
 
       .method-header,
@@ -742,8 +1009,8 @@
 
       .link-bar,
       .video-grid,
-      .compare-grid,
-      .paper-frame {
+      .metric-grid,
+      .compare-grid {
         grid-template-columns: 1fr;
       }
 
@@ -756,7 +1023,12 @@
       }
 
       .paper-frame > figure img {
-        min-height: 280px;
+        min-height: 0;
+      }
+
+      .response-card.figure-card img,
+      .response-card.figure-card.wide img {
+        height: 260px;
       }
 
       .abstract-panel {
@@ -765,6 +1037,10 @@
 
       .abstract-text {
         font-size: 16px;
+      }
+
+      .paper-frame .abstract-text {
+        columns: 1;
       }
     }
 
@@ -787,9 +1063,14 @@
   <canvas id="motion-bg" aria-hidden="true"></canvas>
 
   <header>
-    <video class="hero-video js-autoplay" autoplay muted loop playsinline webkit-playsinline x5-playsinline x5-video-player-type="h5" preload="metadata" aria-hidden="true">
-      <source src="./ours/coffee_martini_video_rgb.mp4" type="video/mp4">
-    </video>
+    <div class="hero-slideshow" aria-hidden="true">
+      <img class="hero-slide" src="./figures/gt_backgrounds/coffee_martini.jpg" alt="">
+      <img class="hero-slide" src="./figures/gt_backgrounds/flame_steak.jpg" alt="">
+      <img class="hero-slide" src="./figures/gt_backgrounds/flame_salmon_1.jpg" alt="">
+      <img class="hero-slide" src="./figures/gt_backgrounds/sear_steak.jpg" alt="">
+      <img class="hero-slide" src="./figures/gt_backgrounds/cut_roasted_beef.jpg" alt="">
+      <img class="hero-slide" src="./figures/gt_backgrounds/cook_spinach.jpg" alt="">
+    </div>
     <div class="hero">
       <p class="eyebrow">Dynamic Gaussian Splatting</p>
       <h1>Dual-Subspace Motion Modeling for Robust Dynamic Gaussian Splatting</h1>
@@ -824,6 +1105,7 @@
       <a href="#abstract">Abstract</a>
       <a href="#ours-carousel">Ours</a>
       <a href="#method-grid">Videos</a>
+      <a href="#response-highlights">Response</a>
       <a href="#figures">Ablation</a>
     </div>
   </nav>
@@ -877,6 +1159,414 @@
             <span>All scenes</span>
           </div>
         </article>
+      </div>
+    </section>
+
+    <section id="response-highlights">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Response Highlights</h2>
+        </div>
+        <div class="metric-grid">
+          <article class="metric-card">
+            <span>iPhone Average mPSNR</span>
+            <strong>16.00</strong>
+            <em>Improves over DeGauss average 13.76</em>
+          </article>
+          <article class="metric-card">
+            <span>Temporal Optical Flow Error</span>
+            <strong>0.885</strong>
+            <em>Lower temporal error than DeGauss 1.379</em>
+          </article>
+          <article class="metric-card">
+            <span>Model Size Reduction</span>
+            <strong>8.5x</strong>
+            <em>21.02 MB average total size versus 178.49 MB</em>
+          </article>
+          <article class="metric-card">
+            <span>N3DV PSNR</span>
+            <strong>31.58</strong>
+            <em>Strong cross-benchmark reconstruction quality</em>
+          </article>
+          <article class="metric-card">
+            <span>NeRF-DS PSNR</span>
+            <strong>24.58</strong>
+            <em>Best average PSNR, SSIM, and LPIPS-V in the original benchmark</em>
+          </article>
+          <article class="metric-card">
+            <span>HyperNeRF PSNR</span>
+            <strong>25.93</strong>
+            <em>Highest average PSNR and SSIM among compared methods</em>
+          </article>
+        </div>
+        <div class="response-gallery">
+          <article class="response-card figure-card wide">
+            <img src="./figures/response_assets/response_img-000.png" alt="Temporal gap stress test with GT, Ours, and abrupt motion comparison">
+            <div class="response-caption">
+              <strong>Temporal Gap Stress Test</strong>
+              <span>Qualitative comparison under sparse temporal supervision</span>
+            </div>
+          </article>
+          <article class="response-card figure-card">
+            <img src="./figures/response_assets/response_img-001.png" alt="Per-Gaussian RM complement diagnostic">
+            <div class="response-caption">
+              <strong>RM Complement Diagnostic</strong>
+              <span>Chebyshev-subspace projection and leakage behavior</span>
+            </div>
+          </article>
+          <article class="response-card figure-card">
+            <img src="./figures/response_assets/response_img-003.png" alt="3D spatial map of RM complement energy">
+            <div class="response-caption">
+              <strong>Spatial Complement Map</strong>
+              <span>3D distribution of residual-motion complement energy</span>
+            </div>
+          </article>
+          <article class="response-card figure-card">
+            <img src="./figures/response_assets/response_img-005.png" alt="Energy ratio for Chebyshev, RM, and full deformation">
+            <div class="response-caption">
+              <strong>Energy Split</strong>
+              <span>Chebyshev and complement energy across deformation variants</span>
+            </div>
+          </article>
+          <article class="response-card figure-card">
+            <img src="./figures/response_assets/response_img-007.png" alt="Output-level orthogonality diagnostics">
+            <div class="response-caption">
+              <strong>Output Orthogonality</strong>
+              <span>Complement behavior outside the Chebyshev output subspace</span>
+            </div>
+          </article>
+          <article class="response-card figure-card wide">
+            <img src="./figures/response_assets/response_img-009.png" alt="Frequency response for Chebyshev field, RM field, and full deformation">
+            <div class="response-caption">
+              <strong>Frequency Response</strong>
+              <span>Motion profile comparison of Chebyshev, RM, and full deformation</span>
+            </div>
+          </article>
+          <article class="table-card wide">
+            <div class="table-title">
+              <strong>iPhone Average</strong>
+              <span>mPSNR / mSSIM / mLPIPS</span>
+            </div>
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Method</th>
+                    <th>mPSNR high</th>
+                    <th>mSSIM high</th>
+                    <th>mLPIPS low</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>SC-GS</td>
+                    <td>13.90</td>
+                    <td>0.464</td>
+                    <td>0.479</td>
+                  </tr>
+                  <tr>
+                    <td>Deformable 3DGS</td>
+                    <td>13.72</td>
+                    <td>0.461</td>
+                    <td>0.430</td>
+                  </tr>
+                  <tr>
+                    <td>4DGS</td>
+                    <td>13.72</td>
+                    <td>0.460</td>
+                    <td>0.509</td>
+                  </tr>
+                  <tr>
+                    <td>MoDec-GS</td>
+                    <td>14.60</td>
+                    <td>0.480</td>
+                    <td>0.443</td>
+                  </tr>
+                  <tr>
+                    <td>ADCGS</td>
+                    <td>12.77</td>
+                    <td>0.488</td>
+                    <td>0.654</td>
+                  </tr>
+                  <tr>
+                    <td>DeGauss</td>
+                    <td>13.76</td>
+                    <td>0.471</td>
+                    <td>0.404</td>
+                  </tr>
+                  <tr class="highlight">
+                    <td>Ours</td>
+                    <td>16.00</td>
+                    <td>0.576</td>
+                    <td>0.368</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+          <article class="table-card">
+            <div class="table-title">
+              <strong>NeRF-DS Benchmark</strong>
+              <span>Average over 7 scenes</span>
+            </div>
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Method</th>
+                    <th>PSNR high</th>
+                    <th>SSIM high</th>
+                    <th>LPIPS-V low</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>3D-GS</td>
+                    <td>20.29</td>
+                    <td>0.782</td>
+                    <td>0.292</td>
+                  </tr>
+                  <tr>
+                    <td>TiNeuVox</td>
+                    <td>21.61</td>
+                    <td>0.823</td>
+                    <td>0.278</td>
+                  </tr>
+                  <tr>
+                    <td>HyperNeRF</td>
+                    <td>23.45</td>
+                    <td>0.849</td>
+                    <td>0.199</td>
+                  </tr>
+                  <tr>
+                    <td>NeRF-DS</td>
+                    <td>23.60</td>
+                    <td>0.849</td>
+                    <td>0.182</td>
+                  </tr>
+                  <tr>
+                    <td>D3DGS</td>
+                    <td>24.11</td>
+                    <td>0.852</td>
+                    <td>0.177</td>
+                  </tr>
+                  <tr>
+                    <td>SCGS</td>
+                    <td>20.80</td>
+                    <td>0.770</td>
+                    <td>0.287</td>
+                  </tr>
+                  <tr>
+                    <td>ADCGS</td>
+                    <td>23.86</td>
+                    <td>0.828</td>
+                    <td>0.189</td>
+                  </tr>
+                  <tr>
+                    <td>4DGS</td>
+                    <td>23.86</td>
+                    <td>0.837</td>
+                    <td>0.166</td>
+                  </tr>
+                  <tr class="highlight">
+                    <td>Ours</td>
+                    <td>24.58</td>
+                    <td>0.862</td>
+                    <td>0.132</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+          <article class="table-card">
+            <div class="table-title">
+              <strong>HyperNeRF Benchmark</strong>
+              <span>Average over 4 scenes</span>
+            </div>
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Method</th>
+                    <th>PSNR high</th>
+                    <th>SSIM high</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Nerfies</td>
+                    <td>22.23</td>
+                    <td>-</td>
+                  </tr>
+                  <tr>
+                    <td>HyperNeRF</td>
+                    <td>22.29</td>
+                    <td>0.598</td>
+                  </tr>
+                  <tr>
+                    <td>TiNeuVox</td>
+                    <td>24.20</td>
+                    <td>0.616</td>
+                  </tr>
+                  <tr>
+                    <td>D3DGS</td>
+                    <td>22.40</td>
+                    <td>0.598</td>
+                  </tr>
+                  <tr>
+                    <td>E3DGS</td>
+                    <td>25.43</td>
+                    <td>0.697</td>
+                  </tr>
+                  <tr>
+                    <td>ADCGS</td>
+                    <td>25.31</td>
+                    <td>0.696</td>
+                  </tr>
+                  <tr>
+                    <td>4DGS</td>
+                    <td>25.17</td>
+                    <td>0.686</td>
+                  </tr>
+                  <tr class="highlight">
+                    <td>Ours</td>
+                    <td>25.93</td>
+                    <td>0.705</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+          <article class="table-card">
+            <div class="table-title">
+              <strong>Temporal Consistency</strong>
+              <span>iPhone average</span>
+            </div>
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Method</th>
+                    <th>mPSNR high</th>
+                    <th>tOF low</th>
+                    <th>Emag low</th>
+                    <th>rflow high</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>DeGauss</td>
+                    <td>13.76</td>
+                    <td>1.379</td>
+                    <td>1.220</td>
+                    <td>0.918</td>
+                  </tr>
+                  <tr class="highlight">
+                    <td>Ours</td>
+                    <td>16.00</td>
+                    <td>0.885</td>
+                    <td>0.718</td>
+                    <td>0.942</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+          <article class="table-card wide n3dv-table">
+            <div class="table-title">
+              <strong>N3DV Benchmark</strong>
+              <span>PSNR / SSIM / LPIPS-A</span>
+            </div>
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Method</th>
+                    <th>PSNR high</th>
+                    <th>SSIM high</th>
+                    <th>LPIPS-A low</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Swift4D</td>
+                    <td>30.05</td>
+                    <td>0.931</td>
+                    <td>0.055</td>
+                  </tr>
+                  <tr>
+                    <td>4DGS</td>
+                    <td>30.19</td>
+                    <td>0.917</td>
+                    <td>0.061</td>
+                  </tr>
+                  <tr>
+                    <td>ADCGS</td>
+                    <td>30.43</td>
+                    <td>0.924</td>
+                    <td>0.083</td>
+                  </tr>
+                  <tr>
+                    <td>FRoG</td>
+                    <td>31.01</td>
+                    <td>0.941</td>
+                    <td>0.050</td>
+                  </tr>
+                  <tr>
+                    <td>DeGauss</td>
+                    <td>31.31</td>
+                    <td>0.942</td>
+                    <td>0.094</td>
+                  </tr>
+                  <tr class="highlight">
+                    <td>Ours</td>
+                    <td>31.58</td>
+                    <td>0.943</td>
+                    <td>0.063</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+          <article class="table-card representation-table">
+            <div class="table-title">
+              <strong>Representation Capacity</strong>
+              <span>Mean on Merf-DS</span>
+            </div>
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Method</th>
+                    <th>GP low</th>
+                    <th>GP MB low</th>
+                    <th>Total MB low</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>4DGS</td>
+                    <td>167,764</td>
+                    <td>39.68</td>
+                    <td>178.49</td>
+                  </tr>
+                  <tr>
+                    <td>SCGS</td>
+                    <td>262,593</td>
+                    <td>71.12</td>
+                    <td>73.92</td>
+                  </tr>
+                  <tr class="highlight">
+                    <td>Ours</td>
+                    <td>39,764</td>
+                    <td>14.26</td>
+                    <td>21.02</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </div>
       </div>
     </section>
 
@@ -946,9 +1636,8 @@
       }
     };
 
-    const scenes = Object.keys(methods.ours.videos);
+    const scenes = ["coffee_martini", "flame_steak", "flame_salmon_1", "sear_steak", "cut_roasted_beef", "cook_spinach"];
     const methodOrder = ["GT", "ours", "ADCGS", "DeGauss"];
-    const compareOrder = ["ADCGS", "DeGauss"];
     const sceneTitle = (name) => name.replaceAll("_", " ");
 
     function videoBlock(src, title, extraClass = "") {
@@ -990,7 +1679,7 @@
     }
 
     function shouldPlayVideo(video) {
-      return video.hasAttribute("data-priority-video") || video.classList.contains("hero-video") || isNearViewport(video);
+      return video.hasAttribute("data-priority-video") || isNearViewport(video);
     }
 
     function renderMethodTable() {
@@ -1019,99 +1708,6 @@
       table.innerHTML = header + rows;
     }
 
-    function renderCompareCards() {
-      const grid = document.getElementById("compareGrid");
-      const cards = [];
-      scenes.forEach((scene) => {
-        compareOrder.forEach((method) => {
-          cards.push(`
-            <article class="compare-card">
-              <h3>${sceneTitle(scene)}</h3>
-              <div class="compare-shell" data-compare>
-                <video class="compare-base js-autoplay" autoplay muted loop playsinline webkit-playsinline x5-playsinline x5-video-player-type="h5" preload="metadata" title="${methods[method].label} ${sceneTitle(scene)}">
-                  <source src="${methods[method].videos[scene]}" type="video/mp4">
-                </video>
-                <video class="compare-ours js-autoplay" autoplay muted loop playsinline webkit-playsinline x5-playsinline x5-video-player-type="h5" preload="metadata" title="Ours ${sceneTitle(scene)}">
-                  <source src="${methods.ours.videos[scene]}" type="video/mp4">
-                </video>
-                <div class="compare-tags"><span>${methods[method].label}</span><span>Ours</span></div>
-                <div class="divider"></div>
-                <div class="handle" aria-hidden="true">&harr;</div>
-              </div>
-              <div class="compare-control">
-                <input type="range" min="0" max="100" value="50" aria-label="${sceneTitle(scene)} ${methods[method].label} and Ours comparison">
-              </div>
-            </article>
-          `);
-        });
-      });
-      grid.innerHTML = cards.join("");
-    }
-
-    function bindCompareCards() {
-      document.querySelectorAll(".compare-card").forEach((card) => {
-        const shell = card.querySelector("[data-compare]");
-        const range = card.querySelector("input[type='range']");
-        const videos = Array.from(card.querySelectorAll("video"));
-
-        const setPosition = (value) => {
-          const clamped = Math.max(0, Math.min(100, value));
-          shell.style.setProperty("--pos", `${clamped}%`);
-          range.value = clamped;
-        };
-
-        const fromPointer = (event) => {
-          const rect = shell.getBoundingClientRect();
-          setPosition(((event.clientX - rect.left) / rect.width) * 100);
-        };
-
-        range.addEventListener("input", (event) => setPosition(Number(event.target.value)));
-        shell.addEventListener("pointerdown", (event) => {
-          shell.setPointerCapture(event.pointerId);
-          fromPointer(event);
-        });
-        shell.addEventListener("pointermove", (event) => {
-          if (event.buttons === 1) fromPointer(event);
-        });
-
-        videos.forEach((video) => {
-          video.addEventListener("play", () => {
-            videos.forEach((item) => {
-              if (item !== video && item.paused) item.play().catch(() => {});
-            });
-          });
-        });
-
-        const syncPair = () => {
-          const [base, ours] = videos;
-          if (!isNearViewport(shell, 260)) {
-            videos.forEach((video) => {
-              if (!video.paused) video.pause();
-            });
-            requestAnimationFrame(syncPair);
-            return;
-          }
-          if (base && ours && Number.isFinite(base.currentTime)) {
-            if (base.paused) base.play().catch(() => {});
-            if (ours.paused) ours.play().catch(() => {});
-            if (Math.abs(base.currentTime - ours.currentTime) > 0.12) {
-              ours.currentTime = base.currentTime;
-            }
-          }
-          requestAnimationFrame(syncPair);
-        };
-        videos.forEach((video) => {
-          video.addEventListener("seeking", () => {
-            const [base, ours] = videos;
-            if (base && ours && video === base) ours.currentTime = base.currentTime;
-            if (base && ours && video === ours) base.currentTime = ours.currentTime;
-          });
-        });
-        syncPair();
-        setPosition(50);
-      });
-    }
-
     function bindVideoState() {
       document.querySelectorAll("video").forEach((video) => {
         video.autoplay = true;
@@ -1137,9 +1733,6 @@
 
     function playAllVideos() {
       document.querySelectorAll("video").forEach((video) => {
-        if (video.classList.contains("hero-video")) {
-          video.playbackRate = 1.65;
-        }
         if (shouldPlayVideo(video)) {
           if (video.readyState === 0) video.load();
           video.play().catch(() => {
@@ -1285,10 +1878,52 @@
       draw();
     }
 
+    function recordVisit() {
+      const endpoint = window.DUSUB_ANALYTICS_ENDPOINT || "http://127.0.0.1:5050/track";
+      if (!endpoint) return;
+
+      const key = "dusubVisitorId";
+      let visitorId = "";
+      try {
+        visitorId = localStorage.getItem(key) || "";
+        if (!visitorId) {
+          visitorId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+          localStorage.setItem(key, visitorId);
+        }
+      } catch (error) {
+        visitorId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      }
+
+      const payload = {
+        visitorId,
+        page: location.href,
+        title: document.title,
+        referrer: document.referrer,
+        language: navigator.language || "",
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "",
+        screen: `${window.screen.width}x${window.screen.height}`
+      };
+      const body = JSON.stringify(payload);
+
+      if (navigator.sendBeacon) {
+        const blob = new Blob([body], { type: "application/json" });
+        if (navigator.sendBeacon(endpoint, blob)) return;
+      }
+
+      fetch(endpoint, {
+        method: "POST",
+        mode: "cors",
+        keepalive: true,
+        headers: { "Content-Type": "application/json" },
+        body
+      }).catch(() => {});
+    }
+
     renderOursCarousel();
     bindVideoState();
     bindOursCarousel();
     startMotionBackground();
+    recordVisit();
     playAllVideos();
 
     window.addEventListener("DOMContentLoaded", playAllVideos);
