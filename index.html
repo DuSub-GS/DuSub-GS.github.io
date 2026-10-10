@@ -1169,16 +1169,6 @@
         </div>
         <div class="metric-grid">
           <article class="metric-card">
-            <span>iPhone Average mPSNR</span>
-            <strong>16.00</strong>
-            <em>Improves over DeGauss average 13.76</em>
-          </article>
-          <article class="metric-card">
-            <span>Temporal Optical Flow Error</span>
-            <strong>0.885</strong>
-            <em>Lower temporal error than DeGauss 1.379</em>
-          </article>
-          <article class="metric-card">
             <span>Model Size Reduction</span>
             <strong>8.5x</strong>
             <em>21.02 MB average total size versus 178.49 MB</em>
@@ -1208,100 +1198,38 @@
             </div>
           </article>
           <article class="response-card figure-card">
-            <img src="./figures/response_assets/response_img-001.png" alt="Per-Gaussian RM complement diagnostic">
+            <img src="./figures/response_assets/rm_complement_2d.png" alt="Per-Gaussian RM complement diagnostic">
             <div class="response-caption">
               <strong>RM Complement Diagnostic</strong>
               <span>Chebyshev-subspace projection and leakage behavior</span>
             </div>
           </article>
           <article class="response-card figure-card">
-            <img src="./figures/response_assets/response_img-003.png" alt="3D spatial map of RM complement energy">
+            <img src="./figures/response_assets/rm_complement_3d.png" alt="3D spatial map of RM complement energy">
             <div class="response-caption">
               <strong>Spatial Complement Map</strong>
               <span>3D distribution of residual-motion complement energy</span>
             </div>
           </article>
           <article class="response-card figure-card">
-            <img src="./figures/response_assets/response_img-005.png" alt="Energy ratio for Chebyshev, RM, and full deformation">
+            <img src="./figures/response_assets/chebyshev_projection_leakage.png" alt="Energy ratio for Chebyshev, RM, and full deformation">
             <div class="response-caption">
               <strong>Energy Split</strong>
               <span>Chebyshev and complement energy across deformation variants</span>
             </div>
           </article>
           <article class="response-card figure-card">
-            <img src="./figures/response_assets/response_img-007.png" alt="Output-level orthogonality diagnostics">
+            <img src="./figures/response_assets/output_level_orthogonality.png" alt="Output-level orthogonality diagnostics">
             <div class="response-caption">
               <strong>Output Orthogonality</strong>
               <span>Complement behavior outside the Chebyshev output subspace</span>
             </div>
           </article>
           <article class="response-card figure-card wide">
-            <img src="./figures/response_assets/response_img-009.png" alt="Frequency response for Chebyshev field, RM field, and full deformation">
+            <img src="./figures/response_assets/fft_spectral_energy.png" alt="Frequency response for Chebyshev field, RM field, and full deformation">
             <div class="response-caption">
               <strong>Frequency Response</strong>
               <span>Motion profile comparison of Chebyshev, RM, and full deformation</span>
-            </div>
-          </article>
-          <article class="table-card wide">
-            <div class="table-title">
-              <strong>iPhone Average</strong>
-              <span>mPSNR / mSSIM / mLPIPS</span>
-            </div>
-            <div class="table-scroll">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Method</th>
-                    <th>mPSNR high</th>
-                    <th>mSSIM high</th>
-                    <th>mLPIPS low</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>SC-GS</td>
-                    <td>13.90</td>
-                    <td>0.464</td>
-                    <td>0.479</td>
-                  </tr>
-                  <tr>
-                    <td>Deformable 3DGS</td>
-                    <td>13.72</td>
-                    <td>0.461</td>
-                    <td>0.430</td>
-                  </tr>
-                  <tr>
-                    <td>4DGS</td>
-                    <td>13.72</td>
-                    <td>0.460</td>
-                    <td>0.509</td>
-                  </tr>
-                  <tr>
-                    <td>MoDec-GS</td>
-                    <td>14.60</td>
-                    <td>0.480</td>
-                    <td>0.443</td>
-                  </tr>
-                  <tr>
-                    <td>ADCGS</td>
-                    <td>12.77</td>
-                    <td>0.488</td>
-                    <td>0.654</td>
-                  </tr>
-                  <tr>
-                    <td>DeGauss</td>
-                    <td>13.76</td>
-                    <td>0.471</td>
-                    <td>0.404</td>
-                  </tr>
-                  <tr class="highlight">
-                    <td>Ours</td>
-                    <td>16.00</td>
-                    <td>0.576</td>
-                    <td>0.368</td>
-                  </tr>
-                </tbody>
-              </table>
             </div>
           </article>
           <article class="table-card">
